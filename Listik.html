@@ -180,13 +180,17 @@
         <label>URL веб-приложения Google Apps Script
           <input name="sheetUrl" placeholder="https://script.google.com/macros/s/.../exec" style="font-size:12px">
         </label>
+        <label>Секрет (SHARED_SECRET из Apps Script)
+          <input name="secret" placeholder="та же строка, что в коде Apps Script" style="font-size:12px">
+        </label>
         <div class="hint">
           <strong>Как получить URL:</strong><br>
           1. Создайте Google-таблицу.<br>
           2. <code>Расширения → Apps Script</code>, вставьте код и сохраните.<br>
-          3. <code>Развернуть → Новое развёртывание → Веб-приложение</code>.<br>
-          4. «Запуск от имени» — <em>Я</em>, «Доступ» — <em>Все</em>.<br>
-          5. Скопируйте URL, заканчивающийся на <code>/exec</code>.
+          3. В коде Apps Script задайте <code>SHARED_SECRET</code> — длинную случайную строку.<br>
+          4. <code>Развернуть → Новое развёртывание → Веб-приложение</code>.<br>
+          5. «Запуск от имени» — <em>Я</em>, «Доступ» — <em>Все</em>.<br>
+          6. Скопируйте URL, заканчивающийся на <code>/exec</code>, и ту же строку секрета вставьте сюда.
         </div>
         <button type="button" id="testConnBtn" style="align-self:flex-start; padding:6px 12px; border:1px solid #ccc; border-radius:6px; background:white; cursor:pointer;">Проверить подключение</button>
         <div id="testResult"></div>
@@ -202,6 +206,7 @@
 <script>
 const STORAGE_KEY = 'plantTracker_v1';
 const URL_KEY     = 'plantTracker_sheetUrl';
+const SECRET_KEY  = 'plantTracker_secret';           // СЕКРЕТ: ключ для localStorage
 const EVENT_TYPES = ['Полив','Удобрение','Пересадка','Обработка от вредителей','Опрыскивание','Обрезка','Другое'];
 const ICONS = {
   water: '<svg class="icon"><use href="#i-water"/></svg>',
@@ -212,6 +217,7 @@ const ICONS = {
 
 let state = { plants: [], events: [] };
 let sheetUrl = localStorage.getItem(URL_KEY) || '';
+let secret   = localStorage.getItem(SECRET_KEY) || '';   // СЕКРЕТ
 let syncing = false;
 
 const $ = s => document.querySelector(s);
@@ -229,7 +235,6 @@ function uid(prefix, list) {
 function load() { try { const raw = localStorage.getItem(STORAGE_KEY); if (raw) state = JSON.parse(raw); } catch(e) { console.error(e); } }
 function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
 
-/* ==== Санитизация: уникальные ID, чистка осиротевших событий ==== */
 function sanitize() {
   if (!Array.isArray(state.plants)) state.plants = [];
   if (!Array.isArray(state.events)) state.events = [];
@@ -252,38 +257,48 @@ function sanitize() {
     e.id = id; usedE.add(id);
   });
 
-  // выбрасываем события без существующего растения
   state.events = state.events.filter(e => usedP.has(String(e.plantId || '').trim()));
 }
 
-/* ==== Синхронизация ==== */
+/* ===== Синхронизация ===== */
 function setSyncStatus(text, cls) {
   const el = $('#syncStatus');
   el.textContent = text || '';
   el.style.color = cls === 'err' ? '#ffd0cc' : cls === 'ok' ? '#c8f0cf' : '';
 }
+
+// СЕКРЕТ: URL и тело запроса теперь содержат secret
 async function sheetFetch(method, payload) {
   if (!sheetUrl) throw new Error('URL не настроен');
+  if (!secret)   throw new Error('Секрет не задан. Откройте ⚙ и введите секрет.');
+
+  const url = (method === 'GET')
+    ? sheetUrl + (sheetUrl.includes('?') ? '&' : '?') + 'secret=' + encodeURIComponent(secret)
+    : sheetUrl;
+
   const opts = { method, redirect: 'follow' };
   if (method === 'POST') {
-    opts.body = JSON.stringify(payload);
-    opts.headers = { 'Content-Type': 'text/plain;charset=utf-8' }; // без preflight
+    opts.body = JSON.stringify({ ...payload, secret });
+    opts.headers = { 'Content-Type': 'text/plain;charset=utf-8' };
   }
-  const res = await fetch(sheetUrl, opts);
+
+  let res;
+  try { res = await fetch(url, opts); }
+  catch (netErr) { throw new Error('Сеть/CORS: ' + netErr.message); }
+
   const text = await res.text();
-  try { return JSON.parse(text); } catch { throw new Error('Некорректный ответ: ' + text.slice(0, 200)); }
+  if (res.status !== 200) throw new Error('HTTP ' + res.status + ': ' + text.slice(0, 200));
+
+  let data;
+  try { data = JSON.parse(text); }
+  catch { throw new Error('Ответ не JSON: ' + text.slice(0, 200)); }
+
+  if (data.error === 'unauthorized') {
+    throw new Error('Неверный секрет. Проверьте, что в ⚙ указан тот же SHARED_SECRET, что в Apps Script.');
+  }
+  return data;
 }
-async function pullFromSheet() {
-  if (!sheetUrl) return;
-  setSyncStatus('Загрузка...');
-  const data = await sheetFetch('GET');
-  if (!data.ok) throw new Error(data.error || 'Ошибка');
-  state.plants = data.plants || [];
-  state.events = data.events || [];
-  sanitize();
-  save(); render();
-  setSyncStatus('Загружено ' + new Date().toLocaleTimeString('ru-RU').slice(0,5), 'ok');
-}
+
 async function pushToSheet() {
   if (!sheetUrl || syncing) return;
   syncing = true;
@@ -293,9 +308,11 @@ async function pushToSheet() {
     if (!data.ok) throw new Error(data.error || 'Ошибка');
     setSyncStatus('Сохр. ' + new Date().toLocaleTimeString('ru-RU').slice(0,5), 'ok');
   } catch (e) {
-    setSyncStatus('Ошибка сохр.', 'err'); console.error(e);
+    setSyncStatus('Ошибка сохр.', 'err');
+    console.error('[pushToSheet]', e);
   } finally { syncing = false; }
 }
+
 async function smartSync() {
   if (!sheetUrl) return;
   setSyncStatus('Синхронизация...');
@@ -307,24 +324,20 @@ async function smartSync() {
     const sheetEmpty = !sheetPlants.length && !sheetEvents.length;
     const localHas = state.plants.length || state.events.length;
 
-    if (sheetEmpty && localHas) {
-      // таблица пуста — выгружаем локальные данные
-      await pushToSheet();
-      return;
-    }
-    // иначе таблица — источник истины
+    if (sheetEmpty && localHas) { await pushToSheet(); return; }
     state.plants = sheetPlants;
     state.events = sheetEvents;
-    sanitize();
-    save(); render();
+    sanitize(); save(); render();
     setSyncStatus('Загружено ' + new Date().toLocaleTimeString('ru-RU').slice(0,5), 'ok');
   } catch (e) {
-    setSyncStatus('Ошибка синхр.', 'err'); console.error(e);
+    setSyncStatus('Ошибка синхр.', 'err');
+    console.error('[smartSync]', e);
   }
 }
+
 function commit() { save(); render(); if (sheetUrl) pushToSheet(); }
 
-/* ==== Отображение ==== */
+/* ===== Отображение ===== */
 function lastEventDate(plantId, types) {
   const m = state.events.filter(e => e.plantId === plantId && types.includes(e.type));
   return m.length ? m.map(e => e.date).filter(Boolean).sort().pop() : '';
@@ -417,7 +430,7 @@ function renderFilters() {
   ft.value = curT;
 }
 
-/* ==== Модалки ==== */
+/* ===== Модалки ===== */
 function openPlantModal(id) {
   const form = $('#plantForm'); form.reset();
   form.elements.id.value = id || '';
@@ -463,7 +476,7 @@ function openHistoryModal(plantId) {
   $('#historyModal').hidden = false;
 }
 
-/* ==== Действия ==== */
+/* ===== Действия ===== */
 function quickEvent(plantId, type) {
   state.events.push({ id: uid('E', state.events), plantId, date: todayISO(), type, comment: '' });
   commit();
@@ -476,7 +489,7 @@ function deletePlant(id) {
   commit();
 }
 
-/* ==== Обработчики ==== */
+/* ===== Обработчики ===== */
 $$('nav button').forEach(btn => btn.addEventListener('click', () => {
   const tab = btn.dataset.tab;
   $$('nav button').forEach(b => b.classList.toggle('active', b === btn));
@@ -510,18 +523,16 @@ $('#addEventBtn').addEventListener('click', () => {
 $$('[data-close]').forEach(b => b.addEventListener('click', () => { b.closest('.modal').hidden = true; }));
 $$('.modal').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.hidden = true; }));
 
-/* ==== Сохранение форм — здесь была главная ошибка ==== */
 $('#plantForm').addEventListener('submit', e => {
   e.preventDefault();
   const data = Object.fromEntries(new FormData(e.target).entries());
   const editingId = String(data.id || '').trim();
-  delete data.id;                     // важно: убираем пустой id из данных
+  delete data.id;
   if (editingId) {
-    const p = state.plants.find(x => x.id === editingId);
-    if (!p) return;
+    const p = state.plants.find(x => x.id === editingId); if (!p) return;
     Object.assign(p, data);
   } else {
-    const id = uid('P', state.plants); // ID генерируется ПОСЛЕ, отдельно
+    const id = uid('P', state.plants);
     state.plants.push({ ...data, id });
   }
   $('#plantModal').hidden = true;
@@ -534,8 +545,7 @@ $('#eventForm').addEventListener('submit', e => {
   delete data.id;
   if (!data.plantId) { alert('Выберите растение.'); return; }
   if (editingId) {
-    const ev = state.events.find(x => x.id === editingId);
-    if (!ev) return;
+    const ev = state.events.find(x => x.id === editingId); if (!ev) return;
     Object.assign(ev, data);
   } else {
     const id = uid('E', state.events);
@@ -545,43 +555,50 @@ $('#eventForm').addEventListener('submit', e => {
   commit();
 });
 
-/* ==== Настройки ==== */
+/* ===== Настройки ===== */
 $('#settingsBtn').addEventListener('click', () => {
   $('#settingsForm').elements.sheetUrl.value = sheetUrl;
+  $('#settingsForm').elements.secret.value  = secret;   // СЕКРЕТ
   $('#testResult').innerHTML = '';
   $('#settingsModal').hidden = false;
 });
 $('#settingsForm').addEventListener('submit', e => {
   e.preventDefault();
   sheetUrl = e.target.elements.sheetUrl.value.trim();
+  secret   = e.target.elements.secret.value.trim();     // СЕКРЕТ
   localStorage.setItem(URL_KEY, sheetUrl);
+  localStorage.setItem(SECRET_KEY, secret);             // СЕКРЕТ
   $('#settingsModal').hidden = true;
   if (sheetUrl) smartSync(); else setSyncStatus('');
 });
 $('#testConnBtn').addEventListener('click', async () => {
-  const url = $('#settingsForm').elements.sheetUrl.value.trim();
+  const url    = $('#settingsForm').elements.sheetUrl.value.trim();
+  const secret2 = $('#settingsForm').elements.secret.value.trim();
   const box = $('#testResult');
-  if (!url) { box.innerHTML = '<div class="status-msg err">URL не задан</div>'; return; }
+  if (!url)    { box.innerHTML = '<div class="status-msg err">URL не задан</div>'; return; }
+  if (!secret2) { box.innerHTML = '<div class="status-msg err">Секрет не задан</div>'; return; }
   box.innerHTML = '<div class="status-msg">Проверка...</div>';
-  const old = sheetUrl; sheetUrl = url;
+  const oldUrl = sheetUrl, oldSecret = secret;
+  sheetUrl = url; secret = secret2;
   try {
     const data = await sheetFetch('GET');
     if (data.ok) box.innerHTML = `<div class="status-msg ok">✓ Подключение работает. Растений: ${(data.plants||[]).length}, событий: ${(data.events||[]).length}.</div>`;
     else box.innerHTML = `<div class="status-msg err">Ошибка: ${esc(data.error||'неизвестно')}</div>`;
   } catch (err) {
-    box.innerHTML = `<div class="status-msg err">Ошибка: ${esc(err.message)}</div>`;
-  } finally { sheetUrl = old; }
+    box.innerHTML = `<div class="status-msg err">${esc(err.message)}</div>`;
+  } finally { sheetUrl = oldUrl; secret = oldSecret; }
 });
 $('#syncBtn').addEventListener('click', async () => {
   if (!sheetUrl) { alert('Сначала настройте URL в настройках (⚙)'); return; }
+  if (!secret)   { alert('Сначала задайте секрет в настройках (⚙)'); return; }
   await smartSync();
 });
 
-/* ==== Старт ==== */
+/* ===== Старт ===== */
 load();
 sanitize();
 render();
-if (sheetUrl) smartSync();
+if (sheetUrl && secret) smartSync();
 </script>
 </body>
 </html>
