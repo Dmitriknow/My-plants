@@ -231,7 +231,7 @@ const ICONS = {
 };
 
 let cfg = { url: '', key: '' };
-let supabase = null;
+let sb = null;                       // <-- клиент Supabase (переименовано)
 let state = { plants: [], events: [] };
 
 const $ = s => document.querySelector(s);
@@ -246,7 +246,7 @@ const nn = v => (v === '' || v == null) ? null : v;   // '' → null для Supa
 function loadCfg() {
   try { cfg = JSON.parse(localStorage.getItem(CFG_KEY)) || { url: '', key: '' }; } catch {}
   if (cfg.url && cfg.key) {
-    supabase = window.supabase.createClient(cfg.url, cfg.key);
+    sb = window.supabase.createClient(cfg.url, cfg.key);   // <-- библиотека + свой клиент
   }
 }
 function saveCfg() { localStorage.setItem(CFG_KEY, JSON.stringify(cfg)); }
@@ -256,7 +256,7 @@ function loadCache() {
 }
 function saveCache() { localStorage.setItem(CACHE_KEY, JSON.stringify(state)); }
 
-function isConfigured() { return !!(supabase && cfg.url && cfg.key); }
+function isConfigured() { return !!(sb && cfg.url && cfg.key); }
 
 /* =========================================================
    СИНХРОНИЗАЦИЯ С SUPABASE
@@ -297,8 +297,8 @@ async function loadFromSupabase() {
   setSyncStatus('Загрузка...');
   try {
     const [{ data: plants, error: e1 }, { data: events, error: e2 }] = await Promise.all([
-      supabase.from('plants').select('*').order('name', { ascending: true }),
-      supabase.from('care_events').select('*').order('date', { ascending: false })
+      sb.from('plants').select('*').order('name', { ascending: true }),
+      sb.from('care_events').select('*').order('date', { ascending: false })
     ]);
     if (e1) throw e1;
     if (e2) throw e2;
@@ -333,7 +333,7 @@ async function createPlant(data) {
     fertilizer: nn(data.fertilizer),
     plans: nn(data.plans)
   };
-  const { data: row, error } = await supabase.from('plants').insert(payload).select().single();
+  const { data: row, error } = await sb.from('plants').insert(payload).select().single();
   if (error) { alert('Ошибка сохранения: ' + error.message); console.error(error); return false; }
   state.plants.push(normalizePlantRow(row));
   state.plants.sort((a,b) => a.name.localeCompare(b.name));
@@ -355,7 +355,7 @@ async function updatePlant(id, data) {
     fertilizer: nn(data.fertilizer),
     plans: nn(data.plans)
   };
-  const { data: row, error } = await supabase.from('plants').update(payload).eq('id', id).select().single();
+  const { data: row, error } = await sb.from('plants').update(payload).eq('id', id).select().single();
   if (error) { alert('Ошибка сохранения: ' + error.message); console.error(error); return false; }
   const idx = state.plants.findIndex(p => p.id === id);
   if (idx >= 0) state.plants[idx] = normalizePlantRow(row);
@@ -366,7 +366,7 @@ async function updatePlant(id, data) {
 
 async function removePlant(id) {
   if (!isConfigured()) { alert('Supabase не настроен. Откройте ⚙.'); return false; }
-  const { error } = await supabase.from('plants').delete().eq('id', id);
+  const { error } = await sb.from('plants').delete().eq('id', id);
   if (error) { alert('Ошибка удаления: ' + error.message); console.error(error); return false; }
   state.plants = state.plants.filter(p => p.id !== id);
   state.events = state.events.filter(e => e.plantId !== id);
@@ -385,7 +385,7 @@ async function createEvent(data) {
     type: data.type,
     comment: nn(data.comment)
   };
-  const { data: row, error } = await supabase.from('care_events').insert(payload).select().single();
+  const { data: row, error } = await sb.from('care_events').insert(payload).select().single();
   if (error) { alert('Ошибка сохранения: ' + error.message); console.error(error); return false; }
   state.events.push(normalizeEventRow(row));
   state.events.sort((a,b) => (b.date||'').localeCompare(a.date||''));
@@ -401,7 +401,7 @@ async function updateEvent(id, data) {
     type: data.type,
     comment: nn(data.comment)
   };
-  const { data: row, error } = await supabase.from('care_events').update(payload).eq('id', id).select().single();
+  const { data: row, error } = await sb.from('care_events').update(payload).eq('id', id).select().single();
   if (error) { alert('Ошибка сохранения: ' + error.message); console.error(error); return false; }
   const idx = state.events.findIndex(e => e.id === id);
   if (idx >= 0) state.events[idx] = normalizeEventRow(row);
@@ -412,7 +412,7 @@ async function updateEvent(id, data) {
 
 async function removeEvent(id) {
   if (!isConfigured()) { alert('Supabase не настроен. Откройте ⚙.'); return false; }
-  const { error } = await supabase.from('care_events').delete().eq('id', id);
+  const { error } = await sb.from('care_events').delete().eq('id', id);
   if (error) { alert('Ошибка удаления: ' + error.message); console.error(error); return false; }
   state.events = state.events.filter(e => e.id !== id);
   saveCache(); render();
@@ -658,7 +658,7 @@ $('#settingsForm').addEventListener('submit', async e => {
   cfg.url = e.target.elements.url.value.trim();
   cfg.key = e.target.elements.key.value.trim();
   saveCfg();
-  supabase = (cfg.url && cfg.key) ? window.supabase.createClient(cfg.url, cfg.key) : null;
+  sb = (cfg.url && cfg.key) ? window.supabase.createClient(cfg.url, cfg.key) : null;
   $('#settingsModal').hidden = true;
   if (isConfigured()) {
     await loadFromSupabase();
