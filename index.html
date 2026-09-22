@@ -22,7 +22,7 @@
   .toolbar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
   .toolbar input, .toolbar select { padding: 8px 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; font-family: inherit; }
   .toolbar input { flex: 1; min-width: 200px; }
-  .primary { background: #2d5a3d; color: white; border: none; padding: 9px 16px; border-radius: 6px; cursor: pointer; font-size: 14px; }
+  .primary { background: #2d5a3d; color: white; border: none; padding: 9px 16px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; }
   .primary:hover { background: #24482f; }
   .primary:disabled { background: #999; cursor: not-allowed; }
 
@@ -32,7 +32,7 @@
   .plant-header h3 { margin: 0; font-size: 17px; }
   .cultivar { font-size: 13px; color: #777; font-style: italic; }
   .plant-menu { display: flex; gap: 2px; }
-  .plant-menu button { background: transparent; border: none; cursor: pointer; font-size: 16px; padding: 4px 6px; border-radius: 4px; color: #666; }
+  .plant-menu button { background: transparent; border: none; cursor: pointer; font-size: 15px; padding: 4px 6px; border-radius: 4px; color: #666; line-height: 1; }
   .plant-menu button:hover { background: #f0f0f0; }
   .plant-info { display: flex; flex-direction: column; gap: 5px; font-size: 13px; color: #555; }
   .plant-info .row { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
@@ -50,18 +50,39 @@
   .events-table tr:hover td { background: #fafcfa; }
   .del-btn { background: none; border: none; cursor: pointer; color: #c33; font-size: 14px; }
 
+  /* Модальные окна */
   .modal { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
   .modal[hidden] { display: none; }
-  .modal-content { background: white; border-radius: 12px; padding: 24px; max-width: 520px; width: 100%; max-height: 90vh; display: flex; flex-direction: column; }
+  .modal-content { background: white; border-radius: 12px; padding: 24px; max-width: 560px; width: 100%; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,.2); }
   .modal-content h2 { margin: 0 0 16px; font-size: 18px; flex-shrink: 0; }
   .modal-content form { display: flex; flex-direction: column; flex: 1; min-height: 0; }
   .form-body { overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-right: 4px; flex: 1; }
   .modal-content label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: #555; }
   .modal-content input, .modal-content textarea, .modal-content select { padding: 8px 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; font-family: inherit; }
-  .modal-buttons { display: flex; justify-content: flex-end; gap: 8px; padding-top: 12px; margin-top: 8px; border-top: 1px solid #eee; flex-shrink: 0; }
-  .modal-buttons button { padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px; border: 1px solid #ccc; background: white; }
-  .primary-btn { background: #2d5a3d; color: white; border-color: #2d5a3d !important; }
-  .primary-btn:disabled { background: #999; border-color: #999 !important; cursor: not-allowed; }
+  .modal-content input:focus, .modal-content textarea:focus, .modal-content select:focus { outline: none; border-color: #2d5a3d; box-shadow: 0 0 0 3px rgba(45,90,61,.12); }
+
+  /* Кнопки в футере модалок — стандартный вид */
+  .modal-buttons { display: flex; justify-content: flex-end; gap: 10px; padding-top: 16px; margin-top: 8px; border-top: 1px solid #eee; flex-shrink: 0; }
+  .modal-buttons button {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 110px; padding: 10px 20px;
+    border-radius: 6px; font-size: 14px; font-weight: 500; font-family: inherit;
+    cursor: pointer; border: 1px solid #ccc; background: #fff; color: #333;
+    transition: background .15s, border-color .15s, box-shadow .15s;
+  }
+  .modal-buttons button:hover { background: #f5f5f5; border-color: #999; }
+  .modal-buttons button:active { background: #ececec; }
+  .modal-buttons .primary-btn { background: #2d5a3d; color: #fff; border-color: #2d5a3d; }
+  .modal-buttons .primary-btn:hover { background: #24482f; border-color: #24482f; }
+  .modal-buttons .primary-btn:active { background: #1d3a26; }
+  .modal-buttons button:disabled { background: #ccc; border-color: #ccc; cursor: not-allowed; color: #fff; }
+
+  /* Список информации о растении */
+  .info-list { display: flex; flex-direction: column; gap: 8px; max-height: 65vh; overflow-y: auto; padding-right: 4px; }
+  .info-row { display: flex; gap: 12px; padding: 10px 12px; background: #f5f7f5; border-radius: 6px; font-size: 14px; align-items: baseline; }
+  .info-row .info-label { color: #888; min-width: 150px; flex-shrink: 0; font-size: 13px; }
+  .info-row .info-value { color: #222; word-break: break-word; flex: 1; }
+  .info-row .info-value.empty { color: #bbb; font-style: italic; }
 
   .history-list { display: flex; flex-direction: column; gap: 8px; max-height: 60vh; overflow-y: auto; }
   .history-item { padding: 10px 12px; background: #f5f7f5; border-radius: 6px; font-size: 13px; }
@@ -140,9 +161,9 @@
         <label>Название *<input name="name" required></label>
         <label>Сорт<input name="cultivar"></label>
         <label>Когда появилось<input type="date" name="acquired"></label>
-        <label>Влажность<input name="humidity" placeholder="напр. высокая, 60%"></label>
-        <label>Свет<input name="light" placeholder="напр. яркий рассеянный"></label>
-        <label>Полив<input name="watering" placeholder="напр. когда верхний слой сухой"></label>
+        <label>Влажность (какую любит)<input name="humidity" placeholder="напр. высокая, 60%"></label>
+        <label>Свет (какой любит)<input name="light" placeholder="напр. яркий рассеянный"></label>
+        <label>Полив (какой любит)<input name="watering" placeholder="напр. когда верхний слой сухой"></label>
         <label>Грунт<input name="soil"></label>
         <label>Горшок<input name="pot" placeholder="напр. 18 см, керамика"></label>
         <label>Удобрения<input name="fertilizer" placeholder="напр. NPK 3-1-2 раз в месяц"></label>
@@ -150,9 +171,20 @@
       </div>
       <div class="modal-buttons">
         <button type="button" data-close>Отмена</button>
-        <button type="submit" class="primary-btn">Сохранить</button>
+        <button type="submit" class="primary-btn" id="plantSubmitBtn">Создать</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- Информация о растении -->
+<div class="modal" id="infoModal" hidden>
+  <div class="modal-content">
+    <h2 id="infoTitle">Информация о растении</h2>
+    <div class="info-list" id="infoList"></div>
+    <div class="modal-buttons">
+      <button type="button" data-close>Закрыть</button>
+    </div>
   </div>
 </div>
 
@@ -170,7 +202,7 @@
       </div>
       <div class="modal-buttons">
         <button type="button" data-close>Отмена</button>
-        <button type="submit" class="primary-btn">Сохранить</button>
+        <button type="submit" class="primary-btn" id="eventSubmitBtn">Создать</button>
       </div>
     </form>
   </div>
@@ -231,14 +263,14 @@ const ICONS = {
 };
 
 let cfg = { url: '', key: '' };
-let sb = null;                       // <-- клиент Supabase (переименовано)
+let sb = null;
 let state = { plants: [], events: [] };
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const todayISO = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); };
-const nn = v => (v === '' || v == null) ? null : v;   // '' → null для Supabase
+const nn = v => (v === '' || v == null) ? null : v;
 
 /* =========================================================
    ХРАНИЛИЩЕ: конфиг + локальный кеш
@@ -246,7 +278,7 @@ const nn = v => (v === '' || v == null) ? null : v;   // '' → null для Supa
 function loadCfg() {
   try { cfg = JSON.parse(localStorage.getItem(CFG_KEY)) || { url: '', key: '' }; } catch {}
   if (cfg.url && cfg.key) {
-    sb = window.supabase.createClient(cfg.url, cfg.key);   // <-- библиотека + свой клиент
+    sb = window.supabase.createClient(cfg.url, cfg.key);
   }
 }
 function saveCfg() { localStorage.setItem(CFG_KEY, JSON.stringify(cfg)); }
@@ -468,7 +500,8 @@ function plantCardHTML(p) {
           ${p.cultivar ? `<div class="cultivar">${esc(p.cultivar)}</div>` : ''}
         </div>
         <div class="plant-menu">
-          <button title="История" data-action="history" data-id="${p.id}">📜</button>
+          <button title="Вся информация" data-action="info" data-id="${p.id}">ⓘ</button>
+          <button title="История ухода" data-action="history" data-id="${p.id}">📜</button>
           <button title="Редактировать" data-action="edit" data-id="${p.id}">✎</button>
           <button title="Удалить" data-action="delete" data-id="${p.id}">🗑</button>
         </div>
@@ -478,7 +511,6 @@ function plantCardHTML(p) {
         <div class="row"><span class="label">${ICONS.leaf} Удобрение:</span><span>${formatDays(lf)}</span></div>
         <div class="row"><span class="label">${ICONS.pot} Пересадка:</span><span>${formatDays(lr)}</span></div>
         <div class="row"><span class="label">${ICONS.bug} Обработка:</span><span>${formatDays(lp)}</span></div>
-        ${p.light ? `<div class="row"><span class="label">Свет:</span><span>${esc(p.light)}</span></div>` : ''}
         ${p.plans ? `<div class="row"><span class="label">Планы:</span><span>${esc(p.plans)}</span></div>` : ''}
       </div>
       <div class="quick-actions">
@@ -524,17 +556,46 @@ function renderFilters() {
 function openPlantModal(id) {
   const form = $('#plantForm'); form.reset();
   form.elements.id.value = id || '';
+  const submitBtn = $('#plantSubmitBtn');
   if (id) {
     const p = state.plants.find(x => x.id === id); if (!p) return;
     ['name','cultivar','acquired','humidity','light','watering','soil','pot','fertilizer','plans']
       .forEach(k => { if (form.elements[k]) form.elements[k].value = p[k] ?? ''; });
     $('#plantModalTitle').textContent = 'Редактировать растение';
+    submitBtn.textContent = 'Сохранить';
   } else {
     $('#plantModalTitle').textContent = 'Новое растение';
+    submitBtn.textContent = 'Создать';
   }
   $('#plantModal').hidden = false;
   setTimeout(() => form.elements.name.focus(), 50);
 }
+
+function openInfoModal(plantId) {
+  const p = state.plants.find(x => x.id === plantId); if (!p) return;
+  const fields = [
+    ['Название', p.name],
+    ['Сорт', p.cultivar],
+    ['Когда появилось', p.acquired],
+    ['Влажность', p.humidity],
+    ['Свет', p.light],
+    ['Полив', p.watering],
+    ['Грунт', p.soil],
+    ['Горшок', p.pot],
+    ['Удобрения', p.fertilizer],
+    ['Планы', p.plans]
+  ];
+  $('#infoTitle').textContent = p.name;
+  $('#infoList').innerHTML = fields.map(([label, value]) => {
+    const hasValue = value !== '' && value != null;
+    return `<div class="info-row">
+      <div class="info-label">${esc(label)}</div>
+      <div class="info-value${hasValue ? '' : ' empty'}">${hasValue ? esc(value) : 'не указано'}</div>
+    </div>`;
+  }).join('');
+  $('#infoModal').hidden = false;
+}
+
 function openEventModal(id, defaults) {
   const form = $('#eventForm'); form.reset();
   form.elements.plantId.innerHTML = state.plants.length
@@ -542,6 +603,7 @@ function openEventModal(id, defaults) {
     : '<option value="">— нет растений —</option>';
   form.elements.type.innerHTML = EVENT_TYPES.map(t => `<option value="${t}">${t}</option>`).join('');
   form.elements.id.value = id || '';
+  const submitBtn = $('#eventSubmitBtn');
   if (id) {
     const ev = state.events.find(x => x.id === id); if (!ev) return;
     form.elements.plantId.value = ev.plantId;
@@ -549,6 +611,7 @@ function openEventModal(id, defaults) {
     form.elements.type.value = ev.type;
     form.elements.comment.value = ev.comment || '';
     $('#eventModalTitle').textContent = 'Редактировать событие';
+    submitBtn.textContent = 'Сохранить';
   } else {
     form.elements.date.value = todayISO();
     if (defaults) {
@@ -556,9 +619,11 @@ function openEventModal(id, defaults) {
       if (defaults.type) form.elements.type.value = defaults.type;
     }
     $('#eventModalTitle').textContent = 'Новое событие';
+    submitBtn.textContent = 'Создать';
   }
   $('#eventModal').hidden = false;
 }
+
 function openHistoryModal(plantId) {
   const p = state.plants.find(x => x.id === plantId); if (!p) return;
   const events = state.events.filter(e => e.plantId === plantId).sort((a,b) => (b.date||'').localeCompare(a.date||''));
@@ -585,7 +650,8 @@ $('#filterType').addEventListener('change', renderEvents);
 $('#plantsGrid').addEventListener('click', async e => {
   const btn = e.target.closest('[data-action]'); if (!btn) return;
   const { action, id, type } = btn.dataset;
-  if (action === 'edit') openPlantModal(Number(id));
+  if (action === 'info') openInfoModal(Number(id));
+  else if (action === 'edit') openPlantModal(Number(id));
   else if (action === 'delete') {
     const p = state.plants.find(x => x.id === Number(id)); if (!p) return;
     if (!confirm(`Удалить «${p.name}» и все его события?`)) return;
@@ -620,7 +686,7 @@ $('#plantForm').addEventListener('submit', async e => {
   const data = Object.fromEntries(new FormData(form).entries());
   const editingId = String(data.id || '').trim();
   delete data.id;
-  const submitBtn = form.querySelector('button[type="submit"]');
+  const submitBtn = $('#plantSubmitBtn');
   submitBtn.disabled = true;
   let ok = false;
   if (editingId) ok = await updatePlant(Number(editingId), data);
@@ -635,7 +701,7 @@ $('#eventForm').addEventListener('submit', async e => {
   const editingId = String(data.id || '').trim();
   delete data.id;
   if (!data.plantId) { alert('Выберите растение.'); return; }
-  const submitBtn = form.querySelector('button[type="submit"]');
+  const submitBtn = $('#eventSubmitBtn');
   submitBtn.disabled = true;
   let ok = false;
   if (editingId) ok = await updateEvent(Number(editingId), data);
@@ -696,8 +762,8 @@ $('#syncBtn').addEventListener('click', async () => {
    ========================================================= */
 loadCfg();
 loadCache();
-render();                    // показываем кеш сразу
-if (isConfigured()) loadFromSupabase();   // и обновляем из сети
+render();
+if (isConfigured()) loadFromSupabase();
 </script>
 </body>
 </html>
