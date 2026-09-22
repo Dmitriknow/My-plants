@@ -27,7 +27,12 @@
   .primary:disabled { background: #999; cursor: not-allowed; }
 
   .plants-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
-  .plant-card { background: white; border-radius: 12px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,.08); display: flex; flex-direction: column; gap: 12px; }
+  .plant-card { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.08); display: flex; flex-direction: column; overflow: hidden; }
+  .plant-photo { width: 100%; height: 200px; background: #f0f3f1; cursor: pointer; overflow: hidden; }
+  .plant-photo img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .3s; }
+  .plant-photo:hover img { transform: scale(1.04); }
+  .plant-photo-placeholder { width: 100%; height: 200px; background: linear-gradient(135deg, #e8f0ea 0%, #d5e3d8 100%); display: flex; align-items: center; justify-content: center; color: #8ba892; font-size: 42px; cursor: pointer; }
+  .plant-body { padding: 16px; display: flex; flex-direction: column; gap: 12px; flex: 1; }
   .plant-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
   .plant-header h3 { margin: 0; font-size: 17px; }
   .cultivar { font-size: 13px; color: #777; font-style: italic; }
@@ -38,7 +43,7 @@
   .plant-info .row { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
   .plant-info .label { color: #888; display: inline-flex; align-items: center; gap: 6px; }
   .icon { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
-  .quick-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding-top: 10px; border-top: 1px solid #eee; }
+  .quick-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding-top: 10px; margin-top: auto; border-top: 1px solid #eee; }
   .quick-actions button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; background: #f0f5f1; border: 1px solid #d5e3d8; color: #2d5a3d; padding: 7px 8px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500; }
   .quick-actions button:hover { background: #e0ede3; }
   .quick-actions button:disabled { opacity: .5; cursor: not-allowed; }
@@ -50,7 +55,6 @@
   .events-table tr:hover td { background: #fafcfa; }
   .del-btn { background: none; border: none; cursor: pointer; color: #c33; font-size: 14px; }
 
-  /* Модальные окна */
   .modal { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
   .modal[hidden] { display: none; }
   .modal-content { background: white; border-radius: 12px; padding: 24px; max-width: 560px; width: 100%; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,.2); }
@@ -61,14 +65,13 @@
   .modal-content input, .modal-content textarea, .modal-content select { padding: 8px 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; font-family: inherit; }
   .modal-content input:focus, .modal-content textarea:focus, .modal-content select:focus { outline: none; border-color: #2d5a3d; box-shadow: 0 0 0 3px rgba(45,90,61,.12); }
 
-  /* Кнопки в футере модалок — стандартный вид */
   .modal-buttons { display: flex; justify-content: flex-end; gap: 10px; padding-top: 16px; margin-top: 8px; border-top: 1px solid #eee; flex-shrink: 0; }
   .modal-buttons button {
     display: inline-flex; align-items: center; justify-content: center;
     min-width: 110px; padding: 10px 20px;
     border-radius: 6px; font-size: 14px; font-weight: 500; font-family: inherit;
     cursor: pointer; border: 1px solid #ccc; background: #fff; color: #333;
-    transition: background .15s, border-color .15s, box-shadow .15s;
+    transition: background .15s, border-color .15s;
   }
   .modal-buttons button:hover { background: #f5f5f5; border-color: #999; }
   .modal-buttons button:active { background: #ececec; }
@@ -77,8 +80,8 @@
   .modal-buttons .primary-btn:active { background: #1d3a26; }
   .modal-buttons button:disabled { background: #ccc; border-color: #ccc; cursor: not-allowed; color: #fff; }
 
-  /* Список информации о растении */
   .info-list { display: flex; flex-direction: column; gap: 8px; max-height: 65vh; overflow-y: auto; padding-right: 4px; }
+  .info-photo { width: 100%; border-radius: 8px; margin-bottom: 12px; display: block; }
   .info-row { display: flex; gap: 12px; padding: 10px 12px; background: #f5f7f5; border-radius: 6px; font-size: 14px; align-items: baseline; }
   .info-row .info-label { color: #888; min-width: 150px; flex-shrink: 0; font-size: 13px; }
   .info-row .info-value { color: #222; word-break: break-word; flex: 1; }
@@ -88,6 +91,20 @@
   .history-item { padding: 10px 12px; background: #f5f7f5; border-radius: 6px; font-size: 13px; }
   .history-item .date { color: #888; font-size: 12px; margin-bottom: 2px; }
   .history-item .type { font-weight: 600; color: #2d5a3d; }
+
+  /* Фото в форме */
+  .photo-field { display: flex; flex-direction: column; gap: 8px; }
+  .photo-field input[type="file"] { padding: 6px; font-size: 13px; }
+  .photo-preview-block { position: relative; display: inline-block; max-width: 100%; }
+  .photo-preview-img { max-width: 100%; max-height: 220px; border-radius: 8px; display: block; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+  .photo-hint { font-size: 12px; color: #888; margin-bottom: 4px; }
+  .photo-remove {
+    position: absolute; top: 8px; right: 8px;
+    background: rgba(0,0,0,.6); color: #fff; border: none;
+    padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px;
+    font-family: inherit;
+  }
+  .photo-remove:hover { background: rgba(200,30,30,.85); }
 
   .empty { color: #888; padding: 40px 20px; text-align: center; font-size: 14px; grid-column: 1/-1; }
   .hint { font-size: 12px; color: #888; line-height: 1.6; }
@@ -99,6 +116,13 @@
 
   .setup-banner { background: #fff7e6; border: 1px solid #f0c36d; border-radius: 8px; padding: 14px 18px; margin-bottom: 20px; font-size: 14px; line-height: 1.5; }
   .setup-banner button { margin-top: 8px; }
+
+  .uploading-overlay {
+    position: absolute; inset: 0; background: rgba(255,255,255,.85);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; color: #2d5a3d; font-weight: 500;
+    border-radius: 12px;
+  }
 </style>
 </head>
 <body>
@@ -158,6 +182,13 @@
     <form id="plantForm">
       <div class="form-body">
         <input type="hidden" name="id">
+        <div class="photo-field">
+          <div class="photo-hint">Фотография</div>
+          <input type="file" name="photo" accept="image/*" id="plantPhotoInput">
+          <div id="photoPreviewWrap" hidden>
+            <div id="photoPreviewBlock" class="photo-preview-block"></div>
+          </div>
+        </div>
         <label>Название *<input name="name" required></label>
         <label>Сорт<input name="cultivar"></label>
         <label>Когда появилось<input type="date" name="acquired"></label>
@@ -254,6 +285,7 @@
    ========================================================= */
 const CACHE_KEY = 'plantTracker_cache_v2';
 const CFG_KEY   = 'plantTracker_supabase_cfg';
+const STORAGE_BUCKET = 'plant-photos';
 const EVENT_TYPES = ['Полив','Удобрение','Пересадка','Обработка от вредителей','Опрыскивание','Обрезка','Другое'];
 const ICONS = {
   water: '<svg class="icon"><use href="#i-water"/></svg>',
@@ -265,6 +297,9 @@ const ICONS = {
 let cfg = { url: '', key: '' };
 let sb = null;
 let state = { plants: [], events: [] };
+
+// Состояние формы растения в части фото
+let photoState = { current: null, newFile: null, remove: false, previewUrl: null };
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -282,12 +317,10 @@ function loadCfg() {
   }
 }
 function saveCfg() { localStorage.setItem(CFG_KEY, JSON.stringify(cfg)); }
-
 function loadCache() {
   try { const raw = localStorage.getItem(CACHE_KEY); if (raw) state = JSON.parse(raw); } catch {}
 }
 function saveCache() { localStorage.setItem(CACHE_KEY, JSON.stringify(state)); }
-
 function isConfigured() { return !!(sb && cfg.url && cfg.key); }
 
 /* =========================================================
@@ -298,7 +331,6 @@ function setSyncStatus(text, cls) {
   el.textContent = text || '';
   el.style.color = cls === 'err' ? '#ffd0cc' : cls === 'ok' ? '#c8f0cf' : '';
 }
-
 function normalizePlantRow(p) {
   return {
     id: p.id,
@@ -311,7 +343,8 @@ function normalizePlantRow(p) {
     soil: p.soil || '',
     pot: p.pot || '',
     fertilizer: p.fertilizer || '',
-    plans: p.plans || ''
+    plans: p.plans || '',
+    photo_url: p.photo_url || ''
   };
 }
 function normalizeEventRow(e) {
@@ -334,7 +367,6 @@ async function loadFromSupabase() {
     ]);
     if (e1) throw e1;
     if (e2) throw e2;
-
     state.plants = (plants || []).map(normalizePlantRow);
     state.events = (events || []).map(normalizeEventRow);
     saveCache();
@@ -349,11 +381,67 @@ async function loadFromSupabase() {
 }
 
 /* =========================================================
+   РАБОТА С ФОТО (Supabase Storage)
+   ========================================================= */
+// Уменьшает изображение до maxSize по длинной стороне, отдаёт Blob в JPEG
+async function resizeImage(file, maxSize = 1400, quality = 0.85) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      let { width, height } = img;
+      if (width > maxSize || height > maxSize) {
+        if (width >= height) {
+          height = Math.round(height * maxSize / width);
+          width = maxSize;
+        } else {
+          width = Math.round(width * maxSize / height);
+          height = maxSize;
+        }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width; canvas.height = height;
+      canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+      canvas.toBlob(blob => {
+        if (!blob) return reject(new Error('Не удалось обработать изображение'));
+        resolve(blob);
+      }, 'image/jpeg', quality);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Не удалось прочитать изображение')); };
+    img.src = url;
+  });
+}
+
+async function uploadPhoto(file) {
+  if (!isConfigured()) throw new Error('Supabase не настроен');
+  const blob = await resizeImage(file);
+  const rand = (crypto.randomUUID && crypto.randomUUID()) || (Date.now() + '-' + Math.random().toString(36).slice(2));
+  const path = `${rand}.jpg`;
+  const { error } = await sb.storage.from(STORAGE_BUCKET).upload(path, blob, {
+    cacheControl: '31536000',
+    upsert: false,
+    contentType: 'image/jpeg'
+  });
+  if (error) throw error;
+  const { data } = sb.storage.from(STORAGE_BUCKET).getPublicUrl(path);
+  return data.publicUrl;
+}
+
+async function deletePhotoByUrl(url) {
+  if (!url || !isConfigured()) return;
+  const marker = `/object/public/${STORAGE_BUCKET}/`;
+  const idx = url.indexOf(marker);
+  if (idx === -1) return;
+  const path = url.slice(idx + marker.length);
+  try { await sb.storage.from(STORAGE_BUCKET).remove([path]); } catch (e) { console.warn('deletePhoto', e); }
+}
+
+/* =========================================================
    ОПЕРАЦИИ НАД РАСТЕНИЯМИ
    ========================================================= */
-async function createPlant(data) {
-  if (!isConfigured()) { alert('Supabase не настроен. Откройте ⚙.'); return false; }
-  const payload = {
+function buildPlantPayload(data, photoUrl) {
+  return {
     name: data.name,
     cultivar: nn(data.cultivar),
     acquired: nn(data.acquired),
@@ -363,9 +451,14 @@ async function createPlant(data) {
     soil: nn(data.soil),
     pot: nn(data.pot),
     fertilizer: nn(data.fertilizer),
-    plans: nn(data.plans)
+    plans: nn(data.plans),
+    photo_url: photoUrl || null
   };
-  const { data: row, error } = await sb.from('plants').insert(payload).select().single();
+}
+
+async function createPlant(data, photoUrl) {
+  if (!isConfigured()) { alert('Supabase не настроен. Откройте ⚙.'); return false; }
+  const { data: row, error } = await sb.from('plants').insert(buildPlantPayload(data, photoUrl)).select().single();
   if (error) { alert('Ошибка сохранения: ' + error.message); console.error(error); return false; }
   state.plants.push(normalizePlantRow(row));
   state.plants.sort((a,b) => a.name.localeCompare(b.name));
@@ -373,21 +466,9 @@ async function createPlant(data) {
   return true;
 }
 
-async function updatePlant(id, data) {
+async function updatePlant(id, data, photoUrl) {
   if (!isConfigured()) { alert('Supabase не настроен. Откройте ⚙.'); return false; }
-  const payload = {
-    name: data.name,
-    cultivar: nn(data.cultivar),
-    acquired: nn(data.acquired),
-    humidity: nn(data.humidity),
-    light: nn(data.light),
-    watering: nn(data.watering),
-    soil: nn(data.soil),
-    pot: nn(data.pot),
-    fertilizer: nn(data.fertilizer),
-    plans: nn(data.plans)
-  };
-  const { data: row, error } = await sb.from('plants').update(payload).eq('id', id).select().single();
+  const { data: row, error } = await sb.from('plants').update(buildPlantPayload(data, photoUrl)).eq('id', id).select().single();
   if (error) { alert('Ошибка сохранения: ' + error.message); console.error(error); return false; }
   const idx = state.plants.findIndex(p => p.id === id);
   if (idx >= 0) state.plants[idx] = normalizePlantRow(row);
@@ -398,8 +479,10 @@ async function updatePlant(id, data) {
 
 async function removePlant(id) {
   if (!isConfigured()) { alert('Supabase не настроен. Откройте ⚙.'); return false; }
+  const plant = state.plants.find(p => p.id === id);
   const { error } = await sb.from('plants').delete().eq('id', id);
   if (error) { alert('Ошибка удаления: ' + error.message); console.error(error); return false; }
+  if (plant && plant.photo_url) deletePhotoByUrl(plant.photo_url); // фоном
   state.plants = state.plants.filter(p => p.id !== id);
   state.events = state.events.filter(e => e.plantId !== id);
   saveCache(); render();
@@ -411,29 +494,20 @@ async function removePlant(id) {
    ========================================================= */
 async function createEvent(data) {
   if (!isConfigured()) { alert('Supabase не настроен. Откройте ⚙.'); return false; }
-  const payload = {
-    plant_id: Number(data.plantId),
-    date: data.date,
-    type: data.type,
-    comment: nn(data.comment)
-  };
-  const { data: row, error } = await sb.from('care_events').insert(payload).select().single();
+  const { data: row, error } = await sb.from('care_events').insert({
+    plant_id: Number(data.plantId), date: data.date, type: data.type, comment: nn(data.comment)
+  }).select().single();
   if (error) { alert('Ошибка сохранения: ' + error.message); console.error(error); return false; }
   state.events.push(normalizeEventRow(row));
   state.events.sort((a,b) => (b.date||'').localeCompare(a.date||''));
   saveCache(); render();
   return true;
 }
-
 async function updateEvent(id, data) {
   if (!isConfigured()) { alert('Supabase не настроен. Откройте ⚙.'); return false; }
-  const payload = {
-    plant_id: Number(data.plantId),
-    date: data.date,
-    type: data.type,
-    comment: nn(data.comment)
-  };
-  const { data: row, error } = await sb.from('care_events').update(payload).eq('id', id).select().single();
+  const { data: row, error } = await sb.from('care_events').update({
+    plant_id: Number(data.plantId), date: data.date, type: data.type, comment: nn(data.comment)
+  }).eq('id', id).select().single();
   if (error) { alert('Ошибка сохранения: ' + error.message); console.error(error); return false; }
   const idx = state.events.findIndex(e => e.id === id);
   if (idx >= 0) state.events[idx] = normalizeEventRow(row);
@@ -441,7 +515,6 @@ async function updateEvent(id, data) {
   saveCache(); render();
   return true;
 }
-
 async function removeEvent(id) {
   if (!isConfigured()) { alert('Supabase не настроен. Откройте ⚙.'); return false; }
   const { error } = await sb.from('care_events').delete().eq('id', id);
@@ -472,10 +545,7 @@ function formatDays(dateStr) {
   return d + ' дн. назад';
 }
 function render() { renderPlants(); renderEvents(); renderFilters(); updateBanner(); }
-
-function updateBanner() {
-  $('#setupBanner').hidden = isConfigured();
-}
+function updateBanner() { $('#setupBanner').hidden = isConfigured(); }
 
 function renderPlants() {
   const q = ($('#search').value || '').toLowerCase().trim();
@@ -487,40 +557,48 @@ function renderPlants() {
   }
   grid.innerHTML = list.map(plantCardHTML).join('');
 }
+
 function plantCardHTML(p) {
   const lw = lastEventDate(p.id, ['Полив']);
   const lf = lastEventDate(p.id, ['Удобрение']);
   const lr = lastEventDate(p.id, ['Пересадка']);
   const lp = lastEventDate(p.id, ['Обработка от вредителей']);
+  const photoBlock = p.photo_url
+    ? `<div class="plant-photo" data-action="info" data-id="${p.id}"><img src="${esc(p.photo_url)}" alt="" loading="lazy"></div>`
+    : `<div class="plant-photo-placeholder" data-action="info" data-id="${p.id}">🌿</div>`;
   return `
     <div class="plant-card">
-      <div class="plant-header">
-        <div>
-          <h3>${esc(p.name)}</h3>
-          ${p.cultivar ? `<div class="cultivar">${esc(p.cultivar)}</div>` : ''}
+      ${photoBlock}
+      <div class="plant-body">
+        <div class="plant-header">
+          <div>
+            <h3>${esc(p.name)}</h3>
+            ${p.cultivar ? `<div class="cultivar">${esc(p.cultivar)}</div>` : ''}
+          </div>
+          <div class="plant-menu">
+            <button title="Вся информация" data-action="info" data-id="${p.id}">ⓘ</button>
+            <button title="История ухода" data-action="history" data-id="${p.id}">📜</button>
+            <button title="Редактировать" data-action="edit" data-id="${p.id}">✎</button>
+            <button title="Удалить" data-action="delete" data-id="${p.id}">🗑</button>
+          </div>
         </div>
-        <div class="plant-menu">
-          <button title="Вся информация" data-action="info" data-id="${p.id}">ⓘ</button>
-          <button title="История ухода" data-action="history" data-id="${p.id}">📜</button>
-          <button title="Редактировать" data-action="edit" data-id="${p.id}">✎</button>
-          <button title="Удалить" data-action="delete" data-id="${p.id}">🗑</button>
+        <div class="plant-info">
+          <div class="row"><span class="label">${ICONS.water} Полив:</span><span>${formatDays(lw)}</span></div>
+          <div class="row"><span class="label">${ICONS.leaf} Удобрение:</span><span>${formatDays(lf)}</span></div>
+          <div class="row"><span class="label">${ICONS.pot} Пересадка:</span><span>${formatDays(lr)}</span></div>
+          <div class="row"><span class="label">${ICONS.bug} Обработка:</span><span>${formatDays(lp)}</span></div>
+          ${p.plans ? `<div class="row"><span class="label">Планы:</span><span>${esc(p.plans)}</span></div>` : ''}
         </div>
-      </div>
-      <div class="plant-info">
-        <div class="row"><span class="label">${ICONS.water} Полив:</span><span>${formatDays(lw)}</span></div>
-        <div class="row"><span class="label">${ICONS.leaf} Удобрение:</span><span>${formatDays(lf)}</span></div>
-        <div class="row"><span class="label">${ICONS.pot} Пересадка:</span><span>${formatDays(lr)}</span></div>
-        <div class="row"><span class="label">${ICONS.bug} Обработка:</span><span>${formatDays(lp)}</span></div>
-        ${p.plans ? `<div class="row"><span class="label">Планы:</span><span>${esc(p.plans)}</span></div>` : ''}
-      </div>
-      <div class="quick-actions">
-        <button data-action="quick" data-type="Полив" data-id="${p.id}">${ICONS.water} Полил</button>
-        <button data-action="quick" data-type="Удобрение" data-id="${p.id}">${ICONS.leaf} Удобрил</button>
-        <button data-action="quick" data-type="Пересадка" data-id="${p.id}">${ICONS.pot} Пересадил</button>
-        <button data-action="quick" data-type="Обработка от вредителей" data-id="${p.id}">${ICONS.bug} Обработал</button>
+        <div class="quick-actions">
+          <button data-action="quick" data-type="Полив" data-id="${p.id}">${ICONS.water} Полил</button>
+          <button data-action="quick" data-type="Удобрение" data-id="${p.id}">${ICONS.leaf} Удобрил</button>
+          <button data-action="quick" data-type="Пересадка" data-id="${p.id}">${ICONS.pot} Пересадил</button>
+          <button data-action="quick" data-type="Обработка от вредителей" data-id="${p.id}">${ICONS.bug} Обработал</button>
+        </div>
       </div>
     </div>`;
 }
+
 function renderEvents() {
   const fp = $('#filterPlant').value;
   const ft = $('#filterType').value;
@@ -551,16 +629,66 @@ function renderFilters() {
 }
 
 /* =========================================================
+   ФОТО В ФОРМЕ: превью, удаление, сброс
+   ========================================================= */
+function resetPhotoState() {
+  if (photoState.previewUrl) URL.revokeObjectURL(photoState.previewUrl);
+  photoState = { current: null, newFile: null, remove: false, previewUrl: null };
+  $('#plantPhotoInput').value = '';
+  renderPhotoPreview();
+}
+
+function renderPhotoPreview() {
+  const wrap = $('#photoPreviewWrap');
+  const block = $('#photoPreviewBlock');
+  let url = null;
+  if (photoState.newFile && photoState.previewUrl) url = photoState.previewUrl;
+  else if (!photoState.remove && photoState.current) url = photoState.current;
+
+  if (!url) { wrap.hidden = true; block.innerHTML = ''; return; }
+  wrap.hidden = false;
+  const hint = photoState.newFile ? 'Новое фото:' : 'Текущее фото:';
+  block.innerHTML = `
+    <div class="photo-hint">${hint}</div>
+    <img class="photo-preview-img" src="${esc(url)}" alt="">
+    <button type="button" class="photo-remove" id="photoRemoveBtn">Удалить</button>
+  `;
+  const rm = $('#photoRemoveBtn');
+  if (rm) rm.addEventListener('click', () => {
+    if (photoState.previewUrl) URL.revokeObjectURL(photoState.previewUrl);
+    photoState.newFile = null;
+    photoState.previewUrl = null;
+    if (photoState.current) photoState.remove = true;   // существующее — помечаем на удаление
+    $('#plantPhotoInput').value = '';
+    renderPhotoPreview();
+  });
+}
+
+$('#plantPhotoInput').addEventListener('change', e => {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) { alert('Выберите файл изображения'); e.target.value = ''; return; }
+  if (photoState.previewUrl) URL.revokeObjectURL(photoState.previewUrl);
+  photoState.newFile = file;
+  photoState.remove = false;
+  photoState.previewUrl = URL.createObjectURL(file);
+  renderPhotoPreview();
+});
+
+/* =========================================================
    МОДАЛЬНЫЕ ОКНА
    ========================================================= */
 function openPlantModal(id) {
   const form = $('#plantForm'); form.reset();
+  resetPhotoState();
   form.elements.id.value = id || '';
   const submitBtn = $('#plantSubmitBtn');
   if (id) {
     const p = state.plants.find(x => x.id === id); if (!p) return;
     ['name','cultivar','acquired','humidity','light','watering','soil','pot','fertilizer','plans']
       .forEach(k => { if (form.elements[k]) form.elements[k].value = p[k] ?? ''; });
+    photoState.current = p.photo_url || null;
+    renderPhotoPreview();
     $('#plantModalTitle').textContent = 'Редактировать растение';
     submitBtn.textContent = 'Сохранить';
   } else {
@@ -586,7 +714,8 @@ function openInfoModal(plantId) {
     ['Планы', p.plans]
   ];
   $('#infoTitle').textContent = p.name;
-  $('#infoList').innerHTML = fields.map(([label, value]) => {
+  const photoHtml = p.photo_url ? `<img class="info-photo" src="${esc(p.photo_url)}" alt="">` : '';
+  $('#infoList').innerHTML = photoHtml + fields.map(([label, value]) => {
     const hasValue = value !== '' && value != null;
     return `<div class="info-row">
       <div class="info-label">${esc(label)}</div>
@@ -680,20 +809,62 @@ $('#addEventBtn').addEventListener('click', () => {
 $$('[data-close]').forEach(b => b.addEventListener('click', () => { b.closest('.modal').hidden = true; }));
 $$('.modal').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.hidden = true; }));
 
+/* =========================================================
+   СОХРАНЕНИЕ РАСТЕНИЯ С ФОТО
+   ========================================================= */
 $('#plantForm').addEventListener('submit', async e => {
   e.preventDefault();
   const form = e.target;
   const data = Object.fromEntries(new FormData(form).entries());
   const editingId = String(data.id || '').trim();
   delete data.id;
+  delete data.photo; // файл обрабатываем отдельно
+
   const submitBtn = $('#plantSubmitBtn');
+  const originalLabel = submitBtn.textContent;
   submitBtn.disabled = true;
-  let ok = false;
-  if (editingId) ok = await updatePlant(Number(editingId), data);
-  else ok = await createPlant(data);
-  submitBtn.disabled = false;
-  if (ok) $('#plantModal').hidden = true;
+  submitBtn.textContent = 'Сохранение...';
+
+  try {
+    let finalPhotoUrl = photoState.current;
+
+    // Если пользователь снял галочку "удалить" и не выбрал новое
+    if (photoState.remove && !photoState.newFile) finalPhotoUrl = null;
+
+    // Если выбрано новое фото — сначала грузим, потом сохраняем
+    if (photoState.newFile) {
+      submitBtn.textContent = 'Загрузка фото...';
+      try {
+        const newUrl = await uploadPhoto(photoState.newFile);
+        finalPhotoUrl = newUrl;
+        // Удаляем старое фото (если было) — только после успешной загрузки нового
+        if (photoState.current && photoState.current !== newUrl) {
+          deletePhotoByUrl(photoState.current);
+        }
+      } catch (err) {
+        console.error('uploadPhoto error:', err);
+        alert('Не удалось загрузить фото: ' + (err.message || err));
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalLabel;
+        return;
+      }
+      submitBtn.textContent = 'Сохранение...';
+    }
+
+    let ok = false;
+    if (editingId) ok = await updatePlant(Number(editingId), data, finalPhotoUrl);
+    else ok = await createPlant(data, finalPhotoUrl);
+
+    if (ok) {
+      $('#plantModal').hidden = true;
+      resetPhotoState();
+    }
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = originalLabel;
+  }
 });
+
 $('#eventForm').addEventListener('submit', async e => {
   e.preventDefault();
   const form = e.target;
@@ -726,12 +897,8 @@ $('#settingsForm').addEventListener('submit', async e => {
   saveCfg();
   sb = (cfg.url && cfg.key) ? window.supabase.createClient(cfg.url, cfg.key) : null;
   $('#settingsModal').hidden = true;
-  if (isConfigured()) {
-    await loadFromSupabase();
-  } else {
-    setSyncStatus('');
-    render();
-  }
+  if (isConfigured()) await loadFromSupabase();
+  else { setSyncStatus(''); render(); }
 });
 $('#testConnBtn').addEventListener('click', async () => {
   const url = $('#settingsForm').elements.url.value.trim();
