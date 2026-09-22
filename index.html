@@ -190,7 +190,7 @@
         <label>Грунт<input name="soil"></label>
         <label>Горшок<input name="pot" placeholder="напр. 18 см, керамика"></label>
         <label>Удобрения<input name="fertilizer" placeholder="напр. NPK 3-1-2 раз в месяц"></label>
-        <label>Планы<textarea name="plans" rows="2"></textarea></label>
+        <label>Комментарий<textarea name="plans" rows="2"></textarea></label>
       </div>
       <div class="modal-buttons">
         <button type="button" data-close>Отмена</button>
@@ -420,16 +420,13 @@ async function deletePhotoByUrl(url) {
   try { await sb.storage.from(STORAGE_BUCKET).remove([path]); } catch (e) { console.warn('deletePhoto', e); }
 }
 
-// Копирует файл в Storage под новым именем — для копии растения,
-// чтобы у оригинала и копии были независимые фотографии.
 async function duplicatePhotoByUrl(url) {
   if (!url || !isConfigured()) return null;
   const marker = `/object/public/${STORAGE_BUCKET}/`;
   const idx = url.indexOf(marker);
-  if (idx === -1) return url;   // не наш файл — оставим как есть
+  if (idx === -1) return url;
   const path = url.slice(idx + marker.length);
 
-  // Скачиваем оригинал
   const resp = await fetch(url);
   if (!resp.ok) throw new Error('Не удалось скачать исходное фото');
   const blob = await resp.blob();
@@ -486,7 +483,6 @@ async function removePlant(id) {
   const plant = state.plants.find(p => p.id === id);
   const { error } = await sb.from('plants').delete().eq('id', id);
   if (error) { alert('Ошибка удаления: ' + error.message); console.error(error); return false; }
-  // Фото удаляем, если на него больше никто не ссылается
   if (plant && plant.photo_url) {
     const stillUsed = state.plants.some(p => p.id !== id && p.photo_url === plant.photo_url);
     if (!stillUsed) deletePhotoByUrl(plant.photo_url);
@@ -596,7 +592,7 @@ function plantCardHTML(p) {
           <div class="row"><span class="label">${ICONS.leaf} Удобрение:</span><span>${formatDays(lf)}</span></div>
           <div class="row"><span class="label">${ICONS.pot} Пересадка:</span><span>${formatDays(lr)}</span></div>
           <div class="row"><span class="label">${ICONS.bug} Обработка:</span><span>${formatDays(lp)}</span></div>
-          ${p.plans ? `<div class="row"><span class="label">Планы:</span><span>${esc(p.plans)}</span></div>` : ''}
+          ${p.plans ? `<div class="row"><span class="label">Комментарий:</span><span>${esc(p.plans)}</span></div>` : ''}
         </div>
         <div class="quick-actions">
           <button data-action="quick" data-type="Полив" data-id="${p.id}">${ICONS.water} Полил</button>
@@ -735,7 +731,7 @@ function openInfoModal(plantId) {
     ['Грунт', p.soil],
     ['Горшок', p.pot],
     ['Удобрения', p.fertilizer],
-    ['Планы', p.plans]
+    ['Комментарий', p.plans]
   ];
   $('#infoTitle').textContent = p.name;
   const photoHtml = p.photo_url ? `<img class="info-photo" src="${esc(p.photo_url)}" alt="">` : '';
@@ -839,11 +835,6 @@ $$('.modal').forEach(m => m.addEventListener('click', e => { if (e.target === m)
 
 /* =========================================================
    СОХРАНЕНИЕ РАСТЕНИЯ С ФОТО
-   Логика:
-   - Если редактируем (id задан) — обновляем.
-   - Если создаём (id пустой) и текущее фото было из prefill
-     без нового файла — дублируем файл в Storage, чтобы у копии
-     была независимая фотография.
    ========================================================= */
 $('#plantForm').addEventListener('submit', async e => {
   e.preventDefault();
@@ -862,7 +853,6 @@ $('#plantForm').addEventListener('submit', async e => {
     let finalPhotoUrl = photoState.current;
     let currentWasPrefilled = false;
 
-    // Определяем, было ли текущее фото просто унаследовано из prefill
     if (!editingId && photoState.current && !photoState.newFile) {
       currentWasPrefilled = true;
     }
@@ -886,15 +876,12 @@ $('#plantForm').addEventListener('submit', async e => {
       }
       submitBtn.textContent = 'Сохранение...';
     } else if (currentWasPrefilled) {
-      // При копировании дублируем файл, чтобы оригинал и копия
-      // не делили одну и ту же фотографию
       submitBtn.textContent = 'Копирование фото...';
       try {
         const dupUrl = await duplicatePhotoByUrl(photoState.current);
         finalPhotoUrl = dupUrl;
       } catch (err) {
         console.warn('duplicatePhoto error:', err);
-        // Не критично — оставим ссылку на оригинал
         finalPhotoUrl = photoState.current;
       }
       submitBtn.textContent = 'Сохранение...';
