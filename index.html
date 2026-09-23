@@ -73,9 +73,22 @@
   .plant-info .label { color: #888; display: inline-flex; align-items: center; gap: 6px; }
   .icon { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
   .quick-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding-top: 10px; margin-top: auto; border-top: 1px solid #eee; }
-  .quick-actions button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; background: #f0f5f1; border: 1px solid #d5e3d8; color: #2d5a3d; padding: 7px 8px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500; }
+  .quick-actions button {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    background: #f0f5f1; border: 1px solid #d5e3d8; color: #2d5a3d;
+    padding: 7px 8px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500;
+    transition: background .15s, border-color .15s, color .15s;
+  }
   .quick-actions button:hover { background: #e0ede3; }
   .quick-actions button:disabled { opacity: .5; cursor: not-allowed; }
+  /* Состояние ожидания подтверждения второго тапа */
+  .quick-actions button.confirming {
+    background: #fff3cd;
+    border-color: #ffc107;
+    color: #856404;
+    font-weight: 600;
+  }
+  .quick-actions button.confirming:hover { background: #ffe8a1; }
 
   .events-table { width: 100%; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.08); border-collapse: collapse; }
   .events-table th, .events-table td { padding: 10px 14px; text-align: left; border-bottom: 1px solid #eee; font-size: 14px; }
@@ -315,17 +328,28 @@ const ICONS = {
   bug:   '<svg class="icon"><use href="#i-bug"/></svg>'
 };
 
+// Двойное нажатие на сенсорных экранах для быстрых действий
+const QUICK_CONFIRM_ON_TOUCH = true;   // false — отключить защиту
+const QUICK_CONFIRM_MS = 1500;         // окно ожидания второго тапа
+
 let cfg = { url: '', key: '' };
 let sb = null;
 let state = { plants: [], events: [] };
 
 let photoState = { current: null, newFile: null, remove: false, previewUrl: null };
 
+// Состояние ожидания подтверждения быстрого действия
+let quickPending = null; // { btn, timer }
+
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const todayISO = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); };
 const nn = v => (v === '' || v == null) ? null : v;
+
+function isTouchDevice() {
+  return window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+}
 
 /* =========================================================
    ХРАНИЛИЩЕ: конфиг + локальный кеш
@@ -669,6 +693,45 @@ function renderFilters() {
 }
 
 /* =========================================================
+   ДВОЙНОЕ НАЖАТИЕ ДЛЯ БЫСТРЫХ ДЕЙСТВИЙ (только на тач-устройствах)
+   ========================================================= */
+function resetQuickPending() {
+  if (!quickPending) return;
+  clearTimeout(quickPending.timer);
+  const b = quickPending.btn;
+  b.classList.remove('confirming');
+  if (b.dataset.originalHtml) b.innerHTML = b.dataset.originalHtml;
+  quickPending = null;
+}
+
+// Возвращает true, если это второй тап и действие нужно выполнить
+function handleQuickTap(btn) {
+  // Второй тап по той же кнопке — подтверждение
+  if (quickPending && quickPending.btn === btn) {
+    clearTimeout(quickPending.timer);
+    const orig = btn.dataset.originalHtml;
+    quickPending = null;
+    btn.classList.remove('confirming');
+    if (orig) btn.innerHTML = orig;
+    return true;
+  }
+  // Тап по другой кнопке — сбрасываем предыдущую и начинаем отсчёт для новой
+  if (quickPending) resetQuickPending();
+  if (!btn.dataset.originalHtml) {
+    btn.dataset.originalHtml = btn.innerHTML;
+  }
+  btn.classList.add('confirming');
+  btn.innerHTML = 'Ещё раз';
+  const timer = setTimeout(() => {
+    btn.classList.remove('confirming');
+    if (btn.dataset.originalHtml) btn.innerHTML = btn.dataset.originalHtml;
+    if (quickPending && quickPending.btn === btn) quickPending = null;
+  }, QUICK_CONFIRM_MS);
+  quickPending = { btn, timer };
+  return false;
+}
+
+/* =========================================================
    ФОТО В ФОРМЕ
    ========================================================= */
 function resetPhotoState() {
@@ -831,6 +894,11 @@ $('#search').addEventListener('input', renderPlants);
 $('#filterPlant').addEventListener('change', renderEvents);
 $('#filterType').addEventListener('change', renderEvents);
 
+// При скролле сбрасываем ожидание подтверждения, чтобы случайный тап не «дострелил»
+window.addEventListener('scroll', () => {
+  if (quickPending) resetQuickPending();
+}, { passive: true });
+
 $('#plantsGrid').addEventListener('click', async e => {
   const btn = e.target.closest('[data-action]'); if (!btn) return;
   const { action, id, type } = btn.dataset;
@@ -848,6 +916,10 @@ $('#plantsGrid').addEventListener('click', async e => {
   }
   else if (action === 'history') openHistoryModal(Number(id));
   else if (action === 'quick') {
+    if (QUICK_CONFIRM_ON_TOUCH && isTouchDevice()) {
+      const confirmed = handleQuickTap(btn);
+      if (!confirmed) return;   // первый тап — ждём второй
+    }
     btn.disabled = true;
     await createEvent({ plantId: Number(id), date: todayISO(), type, comment: '' });
     btn.disabled = false;
