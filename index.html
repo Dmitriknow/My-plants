@@ -218,11 +218,11 @@
         </div>
         <label>Название *<input name="name" required></label>
         <label>Сорт<input name="cultivar"></label>
-        <label>Класс растения
+        <label>Группа полива
           <select name="plant_class">
-            <option value="">— не указан —</option>
-            <option value="ароидные">Ароидные</option>
-            <option value="суккулент">Суккулент</option>
+            <option value="">— не указана —</option>
+            <option value="влаголюбивые">Влаголюбивые (частый полив)</option>
+            <option value="засухоустойчивые">Засухоустойчивые (редкий полив)</option>
           </select>
         </label>
         <label>Когда появилось<input type="date" name="acquired"></label>
@@ -320,10 +320,10 @@ const CFG_KEY   = 'plantTracker_supabase_cfg';
 const STORAGE_BUCKET = 'plant-photos';
 const EVENT_TYPES = ['Полив','Удобрение','Пересадка','Обработка от вредителей','Опрыскивание','Обрезка','Другое'];
 
-// Пороги полива (в днях) по классу растения
+// Пороги полива (в днях) по группе растения
 const WATER_THRESHOLDS = {
-  'ароидные':  { yellow: 5,  red: 8  },
-  'суккулент': { yellow: 8,  red: 11 }
+  'влаголюбивые':     { yellow: 5,  red: 8  },
+  'засухоустойчивые': { yellow: 8,  red: 11 }
 };
 
 const ICONS = {
@@ -854,7 +854,7 @@ function openInfoModal(plantId) {
   const fields = [
     ['Название', p.name],
     ['Сорт', p.cultivar],
-    ['Класс', p.plant_class],
+    ['Группа полива', p.plant_class],
     ['Когда появилось', p.acquired],
     ['Влажность', p.humidity],
     ['Свет', p.light],
