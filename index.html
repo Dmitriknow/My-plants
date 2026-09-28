@@ -5,14 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>🌿 Мои растения</title>
 
-<!-- Иконка для вкладки браузера -->
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%232d5a3d'/><text x='50' y='68' font-size='60' text-anchor='middle'>🌿</text></svg>">
-
-<!-- Иконка для ярлыка на домашнем экране iOS -->
 <link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' rx='40' fill='%232d5a3d'/><text x='90' y='122' font-size='110' text-anchor='middle'>🌿</text></svg>">
-
-<!-- Манифест для Android и PWA -->
-<link rel="manifest" href="data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22%D0%9C%D0%BE%D0%B8%20%D1%80%D0%B0%D1%81%D1%82%D0%B5%D0%BD%D0%B8%D1%8F%22%2C%22short_name%22%3A%22%D0%A0%D0%B0%D1%81%D1%82%D0%B5%D0%BD%D0%B8%D1%8F%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%232d5a3d%22%2C%22theme_color%22%3A%22%232d5a3d%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%3Butf8%2C%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20180%20180%27%3E%3Crect%20width%3D%27180%27%20height%3D%27180%27%20rx%3D%2740%27%20fill%3D%27%25232d5a3d%27%2F%3E%3Ctext%20x%3D%2790%27%20y%3D%27122%27%20font-size%3D%27110%27%20text-anchor%3D%27middle%27%3E%F0%9F%8C%BF%3C%2Ftext%3E%3C%2Fsvg%3E%22%2C%22sizes%22%3A%22180x180%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%7D%5D%7D">
+<link rel="manifest" href="data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22%D0%9C%D0%BE%D0%B8%20%D1%80%D0%B0%D1%81%D1%82%D0%B5%D0%BD%D0%B8%D1%8F%22%2C%22short_name%22%3A%22%D0%A0%D0%B0%D1%81%D1%82%D0%B5%D0%BD%D0%B8%D1%8F%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%232d5a3d%22%2C%22theme_color%22%3A%22%232d5a3d%22%7D">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -21,22 +16,11 @@
   header { background: #2d5a3d; color: white; padding: 14px 24px; display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
   header h1 { font-size: 18px; margin: 0; }
   .plants-count {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 26px;
-    height: 22px;
-    margin-left: 6px;
-    padding: 0 9px;
-    font-size: 12px;
-    font-weight: 600;
-    line-height: 1;
-    color: #e8f0ea;
-    background: rgba(255,255,255,.14);
-    border: 1px solid rgba(255,255,255,.18);
-    border-radius: 11px;
-    vertical-align: middle;
-    transition: background .2s;
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 26px; height: 22px; margin-left: 6px; padding: 0 9px;
+    font-size: 12px; font-weight: 600; line-height: 1; color: #e8f0ea;
+    background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.18);
+    border-radius: 11px; vertical-align: middle; transition: background .2s;
   }
   .plants-count:empty { display: none; }
   nav { display: flex; gap: 8px; }
@@ -55,8 +39,22 @@
   .primary:hover { background: #24482f; }
   .primary:disabled { background: #999; cursor: not-allowed; }
 
+  .toggle-btn {
+    background: #fff; border: 1px solid #ccc; color: #555;
+    padding: 8px 14px; border-radius: 6px; cursor: pointer;
+    font-size: 14px; font-family: inherit;
+    transition: background .15s, border-color .15s, color .15s;
+  }
+  .toggle-btn:hover { background: #f5f5f5; }
+  .toggle-btn.active { background: #2d5a3d; border-color: #2d5a3d; color: #fff; }
+
   .plants-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
-  .plant-card { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.08); display: flex; flex-direction: column; overflow: hidden; }
+  .plant-card { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.08); display: flex; flex-direction: column; overflow: hidden; transition: box-shadow .2s, background .2s; }
+  .plant-card.water-warn { box-shadow: 0 0 0 2px #f0c36d, 0 1px 3px rgba(0,0,0,.08); background: #fffbf0; }
+  .plant-card.water-danger { box-shadow: 0 0 0 2px #e57373, 0 1px 3px rgba(0,0,0,.08); background: #fff3f3; }
+  .plant-card.water-warn .plant-header h3 { color: #8a6d1a; }
+  .plant-card.water-danger .plant-header h3 { color: #b71c1c; }
+
   .plant-photo { width: 100%; height: 200px; background: #f0f3f1; cursor: pointer; overflow: hidden; }
   .plant-photo img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .3s; }
   .plant-photo:hover img { transform: scale(1.04); }
@@ -81,13 +79,7 @@
   }
   .quick-actions button:hover { background: #e0ede3; }
   .quick-actions button:disabled { opacity: .5; cursor: not-allowed; }
-  /* Состояние ожидания подтверждения второго тапа */
-  .quick-actions button.confirming {
-    background: #fff3cd;
-    border-color: #ffc107;
-    color: #856404;
-    font-weight: 600;
-  }
+  .quick-actions button.confirming { background: #fff3cd; border-color: #ffc107; color: #856404; font-weight: 600; }
   .quick-actions button.confirming:hover { background: #ffe8a1; }
 
   .events-table { width: 100%; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.08); border-collapse: collapse; }
@@ -184,6 +176,7 @@
   <section id="plantsSection">
     <div class="toolbar">
       <input id="search" placeholder="Поиск по названию, сорту...">
+      <button class="toggle-btn" id="needsWaterToggle" title="Показать только растения, требующие полива">💧 Требуют полива</button>
       <button class="primary" id="addPlantBtn">+ Добавить растение</button>
     </div>
     <div class="plants-grid" id="plantsGrid"></div>
@@ -225,6 +218,13 @@
         </div>
         <label>Название *<input name="name" required></label>
         <label>Сорт<input name="cultivar"></label>
+        <label>Класс растения
+          <select name="plant_class">
+            <option value="">— не указан —</option>
+            <option value="ароидные">Ароидные</option>
+            <option value="суккулент">Суккулент</option>
+          </select>
+        </label>
         <label>Когда появилось<input type="date" name="acquired"></label>
         <label>Влажность (какую любит)<input name="humidity" placeholder="напр. высокая, 60%"></label>
         <label>Свет (какой любит)<input name="light" placeholder="напр. яркий рассеянный"></label>
@@ -298,9 +298,7 @@
           <strong>Где взять:</strong><br>
           1. Откройте свой проект на <code>supabase.com</code>.<br>
           2. <code>Project Settings (⚙) → API</code>.<br>
-          3. Скопируйте <strong>Project URL</strong> и <strong>anon public</strong> key.<br>
-          <br>
-          Ключ <code>anon</code> безопасен для использования в браузере — доступ к данным ограничен политиками RLS, настроенными в базе.
+          3. Скопируйте <strong>Project URL</strong> и <strong>anon public</strong> key.
         </div>
         <button type="button" id="testConnBtn" style="align-self:flex-start; padding:6px 12px; border:1px solid #ccc; border-radius:6px; background:white; cursor:pointer;">Проверить подключение</button>
         <div id="testResult"></div>
@@ -321,6 +319,13 @@ const CACHE_KEY = 'plantTracker_cache_v2';
 const CFG_KEY   = 'plantTracker_supabase_cfg';
 const STORAGE_BUCKET = 'plant-photos';
 const EVENT_TYPES = ['Полив','Удобрение','Пересадка','Обработка от вредителей','Опрыскивание','Обрезка','Другое'];
+
+// Пороги полива (в днях) по классу растения
+const WATER_THRESHOLDS = {
+  'ароидные':  { yellow: 5,  red: 8  },
+  'суккулент': { yellow: 8,  red: 11 }
+};
+
 const ICONS = {
   water: '<svg class="icon"><use href="#i-water"/></svg>',
   leaf:  '<svg class="icon"><use href="#i-leaf"/></svg>',
@@ -328,18 +333,16 @@ const ICONS = {
   bug:   '<svg class="icon"><use href="#i-bug"/></svg>'
 };
 
-// Двойное нажатие на сенсорных экранах для быстрых действий
-const QUICK_CONFIRM_ON_TOUCH = true;   // false — отключить защиту
-const QUICK_CONFIRM_MS = 1500;         // окно ожидания второго тапа
+const QUICK_CONFIRM_ON_TOUCH = true;
+const QUICK_CONFIRM_MS = 1500;
 
 let cfg = { url: '', key: '' };
 let sb = null;
 let state = { plants: [], events: [] };
 
 let photoState = { current: null, newFile: null, remove: false, previewUrl: null };
-
-// Состояние ожидания подтверждения быстрого действия
-let quickPending = null; // { btn, timer }
+let quickPending = null;
+let onlyNeedsWater = false;
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -352,7 +355,7 @@ function isTouchDevice() {
 }
 
 /* =========================================================
-   ХРАНИЛИЩЕ: конфиг + локальный кеш
+   ХРАНИЛИЩЕ
    ========================================================= */
 function loadCfg() {
   try { cfg = JSON.parse(localStorage.getItem(CFG_KEY)) || { url: '', key: '' }; } catch {}
@@ -368,7 +371,7 @@ function saveCache() { localStorage.setItem(CACHE_KEY, JSON.stringify(state)); }
 function isConfigured() { return !!(sb && cfg.url && cfg.key); }
 
 /* =========================================================
-   СИНХРОНИЗАЦИЯ С SUPABASE
+   СИНХРОНИЗАЦИЯ
    ========================================================= */
 function setSyncStatus(text, cls) {
   const el = $('#syncStatus');
@@ -380,6 +383,7 @@ function normalizePlantRow(p) {
     id: p.id,
     name: p.name || '',
     cultivar: p.cultivar || '',
+    plant_class: p.plant_class || '',
     acquired: p.acquired || '',
     humidity: p.humidity || '',
     light: p.light || '',
@@ -501,6 +505,7 @@ function buildPlantPayload(data, photoUrl) {
   return {
     name: data.name,
     cultivar: nn(data.cultivar),
+    plant_class: nn(data.plant_class),
     acquired: nn(data.acquired),
     humidity: nn(data.humidity),
     light: nn(data.light),
@@ -601,6 +606,23 @@ function formatDays(dateStr) {
   if (d < 0) return 'в будущем';
   return d + ' дн. назад';
 }
+
+// Определение статуса полива
+function waterStatus(p) {
+  const lw = lastEventDate(p.id, ['Полив']);
+  if (!lw) return { level: 'none', days: null };
+  const d = daysAgo(lw);
+  const t = WATER_THRESHOLDS[p.plant_class];
+  if (!t || d == null) return { level: 'none', days: d };
+  if (d >= t.red)    return { level: 'red',    days: d };
+  if (d >= t.yellow) return { level: 'yellow', days: d };
+  return { level: 'ok', days: d };
+}
+function needsWater(p) {
+  const s = waterStatus(p);
+  return s.level === 'yellow' || s.level === 'red';
+}
+
 function render() { renderPlants(); renderEvents(); renderFilters(); updateBanner(); updatePlantsCount(); }
 function updateBanner() { $('#setupBanner').hidden = isConfigured(); }
 function updatePlantsCount() {
@@ -612,10 +634,17 @@ function updatePlantsCount() {
 
 function renderPlants() {
   const q = ($('#search').value || '').toLowerCase().trim();
-  const list = state.plants.filter(p => !q || [p.name, p.cultivar].some(v => String(v||'').toLowerCase().includes(q)));
+  let list = state.plants.filter(p =>
+    !q || [p.name, p.cultivar].some(v => String(v||'').toLowerCase().includes(q))
+  );
+  if (onlyNeedsWater) list = list.filter(needsWater);
+
   const grid = $('#plantsGrid');
   if (!list.length) {
-    grid.innerHTML = `<div class="empty">${state.plants.length ? 'Ничего не найдено' : 'Пока нет растений. Добавьте первое.'}</div>`;
+    let msg = 'Пока нет растений. Добавьте первое.';
+    if (state.plants.length && onlyNeedsWater) msg = 'Нет растений, требующих полива 🌿';
+    else if (state.plants.length) msg = 'Ничего не найдено';
+    grid.innerHTML = `<div class="empty">${msg}</div>`;
     return;
   }
   grid.innerHTML = list.map(plantCardHTML).join('');
@@ -626,17 +655,24 @@ function plantCardHTML(p) {
   const lf = lastEventDate(p.id, ['Удобрение']);
   const lr = lastEventDate(p.id, ['Пересадка']);
   const lp = lastEventDate(p.id, ['Обработка от вредителей']);
+
+  const ws = waterStatus(p);
+  const cardCls = ws.level === 'red'    ? 'water-danger'
+                : ws.level === 'yellow' ? 'water-warn'
+                : '';
+
   const photoBlock = p.photo_url
     ? `<div class="plant-photo" data-action="info" data-id="${p.id}"><img src="${esc(p.photo_url)}" alt="" loading="lazy"></div>`
     : `<div class="plant-photo-placeholder" data-action="info" data-id="${p.id}">🌿</div>`;
   return `
-    <div class="plant-card">
+    <div class="plant-card ${cardCls}">
       ${photoBlock}
       <div class="plant-body">
         <div class="plant-header">
           <div>
             <h3>${esc(p.name)}</h3>
             ${p.cultivar ? `<div class="cultivar">${esc(p.cultivar)}</div>` : ''}
+            ${p.plant_class ? `<div class="cultivar">${esc(p.plant_class)}</div>` : ''}
           </div>
           <div class="plant-menu">
             <button title="Вся информация" data-action="info" data-id="${p.id}">ⓘ</button>
@@ -693,7 +729,7 @@ function renderFilters() {
 }
 
 /* =========================================================
-   ДВОЙНОЕ НАЖАТИЕ ДЛЯ БЫСТРЫХ ДЕЙСТВИЙ (только на тач-устройствах)
+   ДВОЙНОЕ НАЖАТИЕ ДЛЯ БЫСТРЫХ ДЕЙСТВИЙ
    ========================================================= */
 function resetQuickPending() {
   if (!quickPending) return;
@@ -703,10 +739,7 @@ function resetQuickPending() {
   if (b.dataset.originalHtml) b.innerHTML = b.dataset.originalHtml;
   quickPending = null;
 }
-
-// Возвращает true, если это второй тап и действие нужно выполнить
 function handleQuickTap(btn) {
-  // Второй тап по той же кнопке — подтверждение
   if (quickPending && quickPending.btn === btn) {
     clearTimeout(quickPending.timer);
     const orig = btn.dataset.originalHtml;
@@ -715,7 +748,6 @@ function handleQuickTap(btn) {
     if (orig) btn.innerHTML = orig;
     return true;
   }
-  // Тап по другой кнопке — сбрасываем предыдущую и начинаем отсчёт для новой
   if (quickPending) resetQuickPending();
   if (!btn.dataset.originalHtml) {
     btn.dataset.originalHtml = btn.innerHTML;
@@ -787,7 +819,7 @@ function openPlantModal(id, prefill) {
   if (id) {
     form.elements.id.value = id;
     const p = state.plants.find(x => x.id === id); if (!p) return;
-    ['name','cultivar','acquired','humidity','light','watering','soil','pot','fertilizer','plans']
+    ['name','cultivar','plant_class','acquired','humidity','light','watering','soil','pot','fertilizer','plans']
       .forEach(k => { if (form.elements[k]) form.elements[k].value = p[k] ?? ''; });
     photoState.current = p.photo_url || null;
     renderPhotoPreview();
@@ -795,7 +827,7 @@ function openPlantModal(id, prefill) {
     submitBtn.textContent = 'Сохранить';
   } else if (prefill) {
     form.elements.id.value = '';
-    ['cultivar','acquired','humidity','light','watering','soil','pot','fertilizer','plans']
+    ['cultivar','plant_class','acquired','humidity','light','watering','soil','pot','fertilizer','plans']
       .forEach(k => { if (form.elements[k]) form.elements[k].value = prefill[k] ?? ''; });
     form.elements.name.value = (prefill.name || '') + ' (копия)';
     if (prefill.photo_url) {
@@ -822,6 +854,7 @@ function openInfoModal(plantId) {
   const fields = [
     ['Название', p.name],
     ['Сорт', p.cultivar],
+    ['Класс', p.plant_class],
     ['Когда появилось', p.acquired],
     ['Влажность', p.humidity],
     ['Свет', p.light],
@@ -894,7 +927,13 @@ $('#search').addEventListener('input', renderPlants);
 $('#filterPlant').addEventListener('change', renderEvents);
 $('#filterType').addEventListener('change', renderEvents);
 
-// При скролле сбрасываем ожидание подтверждения, чтобы случайный тап не «дострелил»
+// Кнопка-ползунок "Требуют полива"
+$('#needsWaterToggle').addEventListener('click', () => {
+  onlyNeedsWater = !onlyNeedsWater;
+  $('#needsWaterToggle').classList.toggle('active', onlyNeedsWater);
+  renderPlants();
+});
+
 window.addEventListener('scroll', () => {
   if (quickPending) resetQuickPending();
 }, { passive: true });
@@ -918,7 +957,7 @@ $('#plantsGrid').addEventListener('click', async e => {
   else if (action === 'quick') {
     if (QUICK_CONFIRM_ON_TOUCH && isTouchDevice()) {
       const confirmed = handleQuickTap(btn);
-      if (!confirmed) return;   // первый тап — ждём второй
+      if (!confirmed) return;
     }
     btn.disabled = true;
     await createEvent({ plantId: Number(id), date: todayISO(), type, comment: '' });
